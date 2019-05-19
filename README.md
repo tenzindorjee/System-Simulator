@@ -3,8 +3,9 @@
 
 Group Memebers:
 
-  Jimmy Xuan, jimmyxuan@csu.fullerton.edu // CPSC 351 Section 03
-  Tenzin Dorjee, tenzin@csu.fullerton.edu // CPSC 351 Section 02
+  Jimmy Xuan, jimmyxuan@csu.fullerton.edu //CPSC 351 Section 03
+  
+  Tenzin Dorjee, tenzin@csu.fullerton.edu //CPSC 351 Section 02
   
 Programming Lanugage Used: C++
 

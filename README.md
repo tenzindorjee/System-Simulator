@@ -8,3 +8,10 @@ Group Memebers:
 Programming Lanugage Used: C++
 
 How To Execute The Program:
+    
+    Open a Linux terminal
+  
+  	Type make to build the program
+    
+    Type ./system <filename>  #filename being the the name of the text file containing the input
+    

@@ -20,6 +20,7 @@ How To Execute The Program:
     Finally enter the name of the textfile with the input
     
 Contributions: 
-Jimmy Xuan - System.cpp and READEME
+
+  Jimmy Xuan - System.cpp and READEME
 
     

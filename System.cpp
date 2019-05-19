@@ -2,268 +2,329 @@
 #include <fstream>
 #include <vector>
 #include <ctype.h>
-#include <queue> 
+#include <queue>
 #include <string>
 #include <math.h>
 #include <iomanip>
 
-
-struct process {
-	int pid, arrival_time, life_time, spaceNum, memReq, pagesReq;
-	std::vector<int> addVector;
-};
-struct page {
+struct page
+{
 	int start, end, pID, num, arrivalT, endT;
 };
 
-void printMemMap(std::vector<page>, int);
-void printInputQueue(std::queue<process>);
+struct process
+{
+	std::vector<int> addVector;
+	int pid, arrival_time, life_time, spaceNum, memReq, pagesReq;
+};
 
-int main() {
-	int memSize, pSize, availableMem;
-	std::queue<process> waitQueue, inQueue;
-	std::string fiName;
+void printMemory(std::vector<page>, int);
+void printQueue(std::queue<process>);
+
+int main()
+{
+	int memory_Size, page_Size, availableMem;
+
+	std::string fileName;
+	std::queue<process> waitingQueue, Queued;
 
 	std::cout << "Memory Size: ";
-	std::cin >> memSize;
+
+	std::cin >> memory_Size;
 
 	std::cout << "Page Size(1:100, 2:200, 3:400): ";
-	std::cin >> pSize;
 
+	std::cin >> page_Size;
 
-	while ((pSize != 1) && (pSize != 2) && (pSize != 3)) {
+	while ((page_Size != 1) && (page_Size != 2) && (page_Size != 3))
+	{
 		std::cout << "Invalid page size selected!\nEnter a valid number corresponding with the Page Size you would like to choose!\n";
-		std::cin >> pSize;
+		std::cin >> page_Size;
 	}
-	switch (pSize) {
-	case 1:
-		pSize = 100;
-		break;
-	case 2:
-		pSize = 200;
-		break;
-	case 3:
-		pSize = 400;
+
+	if (page_Size == 1)
+	{
+		page_Size = 100;
 	}
-	availableMem = memSize / pSize;
+	else if (page_Size == 2)
+	{
+		psize = 200;
+	}
+	else if (page_Size == 3)
+	{
+		page_Size == 400;
+	}
+
 	std::cin.ignore();
 	std::cout << "Please enter the name the file: ";
-	std::getline(std::cin, fiName);
-	std::fstream fin(fiName, std::fstream::in);
 
-	int totProc;
+	std::getline(std::cin, fileName);
+	std::fstream fin(fileName, std::fstream::in);
 
+	int TProc;
+	availableMem = memory_Size / page_Size;
 
 	/*reads and stores information into waitingQueue*/
 
-	if (fin.is_open()) {
-		fin >> totProc;
-		//read in process information to temp process and then push to inQueue
-		for (int i = 0; i < totProc; i++) {
+	if (fin.is_open())
+	{
+		fin >> TProc;
+
+		//reads information to temp process and then push to Queued
+
+		for (int i = 0; i < TProc; i++)
+		{
 			process temp;
 			temp.memReq = 0;
 			fin >> temp.pid >> temp.arrival_time >> temp.life_time >> temp.spaceNum;
-			//read address spaces into process address vector and store their total sum in memReq.
-			for (int j = 0; j < temp.spaceNum; j++) {
+
+			//read space into process address vector and store their total sum in memReq.
+
+			for (int j = 0; j < temp.spaceNum; j++)
+			{
 				int addr;
 				fin >> addr;
 				temp.memReq = temp.memReq + addr;
 				temp.addVector.push_back(addr);
 			}
-			int wholep = (temp.memReq / pSize);
-			double partialp = temp.memReq%pSize;
-			int add = 0;
-			if (partialp > 0) {
-				add = 1;
+			int entire_process = (temp.memReq / page_Size);
+
+			int left_over = 0;
+
+			double leftover_process = temp.memReq % page_Size;
+
+			if (leftover_process > 0)
+			{
+				left_over = 1;
 			}
-			temp.pagesReq = wholep + add;
-			if (temp.memReq <= memSize) { //here we ignore any processes that require memory
-				waitQueue.push(temp);	// larger than the total memory entered.(per project doc instructions)
+			temp.pagesReq = entire_process + left_over;
+			if (temp.memReq <= memory_Size)
+			{							 //ignore processes that need memory
+				waitingQueue.push(temp); // larger than all memory
 			}
 
-		}//close for
+		} //end forloop
 		fin.close();
 	}
 
-	/*in this section we can start the clock and move the processes now in our 
-	waitqueue into the input queue at their arrival times. The processes are then moved
-	into memory when there is enough space available and their status is tracked.*/
-	long t = 0;
-	int pages = memSize / pSize;
+	/*stars clock and enqueues processes in waitqueue into the input queue at when clock hits arrival time. 
+	Move process into memory if memory avaiable and keeps track of them.*/
+	page initial;
 	std::vector<page> memMap;
-	std::vector<int>turnaroundTime;
-	page init;
-	int lastProcID = waitQueue.back().pid;
+
+	int pages = memory_Size / page_Size;
+	long t = 0;
+
+	int lastProcID = waitingQueue.back().pid;
+	std::vector<int> turnaroundTime;
 
 	//initalize needed pages in memory map with start & end addressees
-	for (int i = 0; i < pages; i++) {
-		init.start = i*pSize;
-		init.end = ((i + 1)*pSize) - 1;
-		init.num = 0;
-		init.pID = -1;
-		init.endT = -1;
-		memMap.push_back(init);
+
+	for (int k = 0; k < pages; k++)
+	{
+		initial.num = 0;
+		initial.pID = -1;
+		initial.start = i * page_Size;
+		initial.endT = -1;
+		initial.end = ((i + 1) * page_Size) - 1;
+		memMap.push_back(initial);
 	}
 
-	int maxTime = 99999;
+	int time_limit = 100000;
 
-	while (t != maxTime+1) {
-		bool print = true;
+	while (t != time_limit)
+	{
+
 		bool printMap = false;
-		bool waitCheck = false;
-		//prints out arrival of processes at time t, adds them to the input queue and then prints the updated input queue
-		if (!waitQueue.empty()) {
-			waitCheck =(waitQueue.front().arrival_time == t);
+
+		bool output = true;
+
+		bool Waiting = false;
+		//prints arrival time of process, then puts them into queue and prints queue
+		if (!waitingQueue.empty())
+		{
+			Waiting = (waitingQueue.front().arrival_time == t);
 		}
-			while (waitCheck){
-				std::cout << "t = " << t<<std::endl;
-				std::cout << "\t\tProcess " << waitQueue.front().pid << " arrives\n";	
-				inQueue.push(waitQueue.front());				
-				waitQueue.pop();								
-				printInputQueue(inQueue);
-				print = false;
-				printMap = true;
+		while (Waiting)
+		{
 
-				if (!waitQueue.empty()) {
-					waitCheck = (waitQueue.front().arrival_time == t);
-				}
-				else {
-					waitCheck = false;
-				}
+			std::cout << "t = " << t << std::endl;
+			std::cout << "\t\tProcess " << waitingQueue.front().pid << " arrives\n";
+			Queued.push(waitingQueue.front());
+			waitingQueue.pop();
+			printQueue(Queued);
+			printMap = true;
+			output = false;
+
+			if (!waitingQueue.empty())
+			{
+				Waiting = (waitingQueue.front().arrival_time == t);
 			}
-		
-			bool pprint = true;
+			else
+			{
+				Waiting = false;
+			}
+		}
 
-		//clean out pages with finished processes
-		for (int i = 0; i < pages; i++) {
+		bool processes_p = true;
+
+		//clears out finished processes
+		for (int i = 0; i < pages; i++)
+		{
 			int p = 0;
-			if (memMap[i].endT == t) {
+			if (memMap[i].endT == t)
+			{
+
 				p = memMap[i].pID;
-				memMap[i].pID = -1;
-				memMap[i].num = 0;
 				memMap[i].endT = 0;
+				memMap[i].num = 0;
+				memMap[i].pID = -1;
+
 				availableMem++;
 			}
-			if ((p != 0)&&(pprint)) {
-				if (print) {
+			if ((p != 0) && (processes_p))
+			{
+				if (output)
+				{
 					std::cout << "t = " << t << std::endl;
-					print = false;
+					output = false;
 				}
 				std::cout << "\t\tProcess " << p << " completes\n";
+				processes_p = false;
 				printMap = true;
-				pprint = false;
 			}
 		}
 
+		//checks available memory
 
-		//compares available memory to items in input queue and places them in available pages of main memory.
-
-		while ((!inQueue.empty()) && (availableMem >= inQueue.front().pagesReq)) {
-			if (print) {
-				std::cout << "t = " << t<<std::endl;
-				print = false;
+		while ((!Queued.empty()) && (availableMem >= Queued.front().pagesReq))
+		{
+			if (output)
+			{
+				std::cout << "t = " << t << std::endl;
+				output = false;
 			}
-			std::cout << "\t\tMM moves Process " << inQueue.front().pid << " to memory\n";
+
+			std::cout << "\t\tMM moves Process " << Queued.front().pid << " to memory\n";
 			printMap = true;
-			int endTime = t + inQueue.front().life_time;
+			int endTime = t + Queued.front().life_time;
 			int pnum = 1;
 			int i = 0;
-			if (memMap[i].pID == lastProcID) {
-				maxTime = endTime;
+
+			if (memMap[i].pID == lastProcID)
+			{
+				time_limit = endTime;
 			}
-			memMap[i].arrivalT = inQueue.front().arrival_time;
+
+			memMap[i].arrivalT = Queued.front().arrival_time;
 			turnaroundTime.push_back(memMap[i].endT - memMap[i].arrivalT);
-			
-			while ((inQueue.front().pagesReq != 0) && (i < pages)) {
-				if (memMap[i].pID == -1) {
-					memMap[i].pID = inQueue.front().pid;
-					memMap[i].num = pnum;
+
+			while ((Queued.front().pagesReq != 0) && (i < pages))
+			{
+
+				if (memMap[i].pID == -1)
+				{
+					memMap[i].pID = Queued.front().pid;
 					memMap[i].endT = endTime;
+					memMap[i].num = pnum;
 					pnum++;
 					availableMem--;
-					inQueue.front().pagesReq--;
-
+					Queued.front().pagesReq--;
 				}
 				i++;
 			}
-			inQueue.pop();
-		}//end front of queue to memorywhile
+			Queued.pop();
+		} //end queue
 
-		//print memory map.
-		if (printMap) {
-			printMemMap(memMap, pages);
+		//output memory map.
+		if (printMap)
+		{
+			printMemory(memMap, pages);
 		}
 		t++;
-	}//time frame ends
+	} //close frame
 
-	//this section calculates the average turnaround time from the turnaround time vector and prints it to the console.
-	int sum=0;
-	for (int i = 0; i < turnaroundTime.size(); i++) {
+	//calculates the average turnaround time
+	int sum = 0;
+	for (int i = 0; i < turnaroundTime.size(); i++)
+	{
 		sum += turnaroundTime[i];
 	}
 	double turnaround = sum / turnaroundTime.size();
-	std::cout <<"\nAverage Turnaround Time: " <<std::fixed << std::setprecision(2) << turnaround <<"\n"<< std::endl;
+
+	std::cout << "\nAverage Turnaround Time: " << std::fixed << std::setprecision(2) << turnaround << "\n" << std::endl;
+
 	return 0;
 }
 
 //prints memory map status
-void printMemMap(std::vector<page> mMap, int ptot) {
+void printMemory(std::vector<page> mMap, int E_R)
+{
+
+	int last = 0;
+	bool blank = true;
+
 	std::cout << "\t\tMemory Map: \n";
-	int eStart = 0;
-	int eEnd = 0;
-	bool emptyStart = true;
+	int begin = 0;
 
-	for (int i = 0; i < ptot; i++) {
-		page p = mMap[i];
+	for (int i = 0; i < E_R; i++)
+	{
+		page a = mMap[i];
 
-		if (p.pID == -1){
-			if (emptyStart){
-				eStart = p.start;
-				emptyStart = false;
+		if (a.pID == -1)
+		{
+			if (blank)
+			{
+				begin = a.start;
+				blank = false;
 			}
-			eEnd = p.end;
-			if (i == (ptot - 1)){
-				std::cout << "\t\t\t" << eStart << "-" << eEnd << ": ";
+			last = a.end;
+			if (i == (E_R - 1))
+			{
+				std::cout << "\t\t\t" << begin << "-" << last << ": ";
+
 				std::cout << "\tFree Frame(s)\n";
-			}
-
-		}else {
-			if (eEnd != 0) {
-				std::cout << "\t\t\t" << eStart << "-" << eEnd << ": ";
-				if (i == 1) {
-					std::cout << "\t";
-				}
-				std::cout << "\tFree Frame(s)\n";
-				eStart = 0;
-				eEnd = 0;
-				emptyStart = true;
-				std::cout << "\t\t\t" << p.start << "-" << p.end << ": ";
-				std::cout << "\tProcess " << p.pID << ", \tPage " << p.num<< std::endl;
-			}
-			else {
-				std::cout << "\t\t\t" << p.start << "-" << p.end << ": ";
-				if (i == 0) {
-					std::cout << "\t";
-				}
-				std::cout << "\tProcess " << p.pID << ", \tPage " << p.num << std::endl;
 			}
 		}
-
-
-
+		else
+		{
+			if (last != 0)
+			{
+				std::cout << "\t\t\t" << begin << "-" << last << ": ";
+				if (i == 1)
+				{
+					std::cout << "\t";
+				}
+				std::cout << "\tFree Frame(s)\n";
+				blank = true;
+				last = 0;
+				begin = 0;
+				std::cout << "\t\t\t" << a.start << "-" << a.end << ": ";
+				std::cout << "\tProcess " << a.aID << ", \tPage " << a.num << std::endl;
+			}
+			else
+			{
+				std::cout << "\t\t\t" << a.start << "-" << a.end << ": ";
+				if (i == 0)
+				{
+					std::cout << "\t";
+				}
+				std::cout << "\tProcess " << a.pID << ", \tPage " << a.num << std::endl;
+			}
+		}
 	}
-
 
 	std::cout << std::endl;
 }
 
-
-//prints input queue status
-void printInputQueue(std::queue<process> iQueue) {
+//prints input queue
+void printQueue(std::queue<process> input)
+{
 	std::cout << "\t\tInput Queue: [ ";
-	while (!iQueue.empty()) {
-		std::cout << iQueue.front().pid << " ";
-		iQueue.pop();
+	while (!input.empty())
+	{
+		std::cout << input.front().pid << " ";
+		input.pop();
 	}
 	std::cout << "]\n";
 }

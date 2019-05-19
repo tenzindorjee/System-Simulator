@@ -9,13 +9,13 @@
 
 struct page
 {
-	int start, end, pID, num, arrivalT, endT;
+	int arrivalT, pID, num, endT, start, end;
 };
 
 struct process
 {
 	std::vector<int> addVector;
-	int pid, arrival_time, life_time, spaceNum, memReq, pagesReq;
+	int life_time, spaceNum, memReq, pid, arrival_time, pagesReq;
 };
 
 void printMemory(std::vector<page>, int);
@@ -23,10 +23,10 @@ void printQueue(std::queue<process>);
 
 int main()
 {
-	int memory_Size, page_Size, availableMem;
+	int availableMem, page_Size, memory_Size;
 
 	std::string fileName;
-	std::queue<process> waitingQueue, Queued;
+	std::queue<process> Queued, waitingQueue;
 
 	std::cout << "Memory Size: ";
 
@@ -36,7 +36,7 @@ int main()
 
 	std::cin >> page_Size;
 
-	while ((page_Size != 1) && (page_Size != 2) && (page_Size != 3))
+	while ((page_Size != 3) && (page_Size != 2) && (page_Size != 1))
 	{
 		std::cout << "Invalid page size selected!\nEnter a valid number corresponding with the Page Size you would like to choose!\n";
 		std::cin >> page_Size;
@@ -48,7 +48,7 @@ int main()
 	}
 	else if (page_Size == 2)
 	{
-		psize = 200;
+		page_Size = 200;
 	}
 	else if (page_Size == 3)
 	{
@@ -84,7 +84,7 @@ int main()
 			{
 				int addr;
 				fin >> addr;
-				temp.memReq = temp.memReq + addr;
+				temp.memReq = addr+ temp.memReq;
 				temp.addVector.push_back(addr);
 			}
 			int entire_process = (temp.memReq / page_Size);
@@ -97,7 +97,7 @@ int main()
 			{
 				left_over = 1;
 			}
-			temp.pagesReq = entire_process + left_over;
+			temp.pagesReq = left_over + entire_process;
 			if (temp.memReq <= memory_Size)
 			{							 //ignore processes that need memory
 				waitingQueue.push(temp); // larger than all memory
@@ -115,7 +115,7 @@ int main()
 	int pages = memory_Size / page_Size;
 	long t = 0;
 
-	int lastProcID = waitingQueue.back().pid;
+	int endID = waitingQueue.back().pid;
 	std::vector<int> turnaroundTime;
 
 	//initalize needed pages in memory map with start & end addressees
@@ -124,9 +124,9 @@ int main()
 	{
 		initial.num = 0;
 		initial.pID = -1;
-		initial.start = i * page_Size;
+		initial.start = page_Size*k;
 		initial.endT = -1;
-		initial.end = ((i + 1) * page_Size) - 1;
+		initial.end = ( page_Size*(k + 1)) - 1;
 		memMap.push_back(initial);
 	}
 
@@ -207,11 +207,11 @@ int main()
 
 			std::cout << "\t\tMM moves Process " << Queued.front().pid << " to memory\n";
 			printMap = true;
-			int endTime = t + Queued.front().life_time;
+			int endTime = Queued.front().life_time + t;
 			int pnum = 1;
 			int i = 0;
 
-			if (memMap[i].pID == lastProcID)
+			if (memMap[i].pID == endID)
 			{
 				time_limit = endTime;
 			}
@@ -219,7 +219,7 @@ int main()
 			memMap[i].arrivalT = Queued.front().arrival_time;
 			turnaroundTime.push_back(memMap[i].endT - memMap[i].arrivalT);
 
-			while ((Queued.front().pagesReq != 0) && (i < pages))
+			while ( (i < pages) &&(Queued.front().pagesReq != 0) )
 			{
 
 				if (memMap[i].pID == -1)
@@ -227,11 +227,11 @@ int main()
 					memMap[i].pID = Queued.front().pid;
 					memMap[i].endT = endTime;
 					memMap[i].num = pnum;
-					pnum++;
-					availableMem--;
-					Queued.front().pagesReq--;
+					pnum =+1;
+					availableMem -=1;
+					Queued.front().pagesReq -=1;
 				}
-				i++;
+				i +=1;
 			}
 			Queued.pop();
 		} //end queue
@@ -300,7 +300,7 @@ void printMemory(std::vector<page> mMap, int E_R)
 				last = 0;
 				begin = 0;
 				std::cout << "\t\t\t" << a.start << "-" << a.end << ": ";
-				std::cout << "\tProcess " << a.aID << ", \tPage " << a.num << std::endl;
+				std::cout << "\tProcess " << a.pID << ", \tPage " << a.num << std::endl;
 			}
 			else
 			{

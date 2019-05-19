@@ -1,9 +1,10 @@
 #  Project 2: System-Simulator
-CPSC 351 Section 03
+
 
 Group Memebers:
 
-  Jimmy Xuan, jimmyxuan@csu.fullerton.edu
+  Jimmy Xuan, jimmyxuan@csu.fullerton.edu // CPSC 351 Section 03
+  Tenzin Dorjee, tenzin@csu.fullerton.edu // CPSC 351 Section 02
   
 Programming Lanugage Used: C++
 
@@ -22,5 +23,6 @@ How To Execute The Program:
 Contributions: 
 
   Jimmy Xuan - System.cpp and READEME
+  Tenzin Dorjee - System.cpp and Documentation 
 
     

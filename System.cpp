@@ -1,11 +1,11 @@
 #include <iostream>
-#include <fstream>
-#include <vector>
-#include <ctype.h>
-#include <queue>
-#include <string>
 #include <math.h>
+#include <ctype.h>
+#include <fstream>
 #include <iomanip>
+#include <string>
+#include <queue>
+#include <vector>
 
 struct page
 {

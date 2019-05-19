@@ -13,5 +13,13 @@ How To Execute The Program:
   
   	Type make to build the program
     
-    Type ./system <filename>  #filename being the the name of the text file containing the input
+    Type ./system 
+    
+    The program then asks for the size of the memory and the page size
+    
+    Finally enter the name of the textfile with the input
+    
+Contributions: 
+Jimmy Xuan - System.cpp and READEME
+
     
